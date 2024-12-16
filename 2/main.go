@@ -23,8 +23,9 @@ func main() {
         var prevLevel *int
         var prevDirection *int
         safe := true
-        for _, i := range reportStr {
-            level, err := strconv.Atoi(i)
+        skippedUnsafe := false
+        for i := 0; i < len(reportStr); i++ {
+            level, err := strconv.Atoi(reportStr[i])
             if err != nil {
                 panic(err)
             }
@@ -39,13 +40,29 @@ func main() {
 
                 absDiff := absDiffInt(level,*prevLevel) 
                 if absDiff > 3 || absDiff < 1 {
-                    safe = false
-                    break
+                    if skippedUnsafe == true {
+                        safe = false
+                        break
+                    } else {
+                        skippedUnsafe = true
+                        i = -1
+                        prevDirection = nil
+                        prevLevel = nil
+                        continue
+                    }
                 }
                 if prevDirection != nil {
                     if direction != *prevDirection {
-                        safe = false
-                        break
+                        if skippedUnsafe == true {
+                            safe = false
+                            break
+                        } else {
+                            skippedUnsafe = true
+                            i = -1
+                            prevDirection = nil
+                            prevLevel = nil
+                            continue
+                        }
                     }
                 }
 
