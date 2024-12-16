@@ -6,7 +6,6 @@ import (
     "bufio"
     "fmt"
     "log"
-    "slices"
     "os"
 )
 
@@ -18,41 +17,50 @@ func main() {
     defer fi.Close()
 
     scanner := bufio.NewScanner(fi)
-    var leftValues []int
-    var rightValues []int
+    safeReports := 0
     for scanner.Scan() {
-        pairFromInput := strings.Split(scanner.Text(), "   ")
-        leftInt, err := strconv.Atoi(pairFromInput[0])
-        if err != nil {
-            log.Fatal(err)
-        }
-
-        rightInt, err := strconv.Atoi(pairFromInput[1])
-        if err != nil {
-            log.Fatal(err)
-        }
-
-        leftValues = append(leftValues, leftInt)
-        rightValues = append(rightValues, rightInt)
-    }
-    slices.Sort(leftValues)
-    slices.Sort(rightValues)
-    var acum = 0
-    var score = 0
-    for i := 0; i < len(leftValues); i++ {
-        acum = acum + absInt(leftValues[i] - rightValues[i])
-        var leftValue = leftValues[i]
-        var numberOfRightCoincidences = 0
-        for j := 0; j < len(rightValues); j++ {
-            if leftValue == rightValues[j] {
-                numberOfRightCoincidences++
+        reportStr := strings.Split(scanner.Text(), " ")
+        var prevLevel *int
+        var prevDirection *int
+        safe := true
+        for _, i := range reportStr {
+            level, err := strconv.Atoi(i)
+            if err != nil {
+                panic(err)
             }
+            if prevLevel != nil {
+                diff := level - *prevLevel
+                var direction int
+                if diff < 0 {
+                    direction = 1
+                } else {
+                    direction = -1
+                }
+
+                absDiff := absDiffInt(level,*prevLevel) 
+                if absDiff > 3 || absDiff < 1 {
+                    safe = false
+                    break
+                }
+                if prevDirection != nil {
+                    if direction != *prevDirection {
+                        safe = false
+                        break
+                    }
+                }
+
+                prevDirection = &direction
+            }
+
+            prevLevel = &level
         }
-        score = score + (numberOfRightCoincidences * leftValue)
+        if safe == true {
+            safeReports++
+        }
+
     }
 
-    fmt.Println(acum)
-    fmt.Println(score)
+    fmt.Println(safeReports)
 
     if err := scanner.Err(); err != nil {
         log.Fatal(err)
